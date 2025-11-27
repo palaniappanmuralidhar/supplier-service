@@ -1,0 +1,75 @@
+trigger:
+  - main  # or master branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageName: supplier-service
+  tag: '$(Build.BuildId)' # unique tag per build
+
+stages:
+
+  # Stage 1: Build Spring Boot JAR
+  - stage: Build
+    displayName: 'Build Spring Boot Project'
+    jobs:
+      - job: Build
+        steps:
+          - task: Maven@3
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean package'
+              options: '-DskipTests'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              mavenVersionOption: 'Default'
+              publishJUnitResults: false
+
+  # Stage 2: Build Docker image and push to ACR
+  - stage: Docker
+    displayName: 'Build & Push Docker Image'
+    dependsOn: Build
+    jobs:
+      - job: DockerBuild
+        steps:
+          - task: Docker@2
+            displayName: 'Build and Push Docker Image'
+            inputs:
+              command: 'buildAndPush'
+              repository: '$(imageName)'
+              dockerfile: 'Dockerfile'
+              containerRegistry: 'myACRConnection'
+              tags: |
+                $(tag)
+
+  # Stage 3: Deploy to Kubernetes
+  - stage: Deploy
+    displayName: 'Deploy to Kubernetes'
+    dependsOn: Docker
+    jobs:
+      - deployment: DeployToK8s
+        environment: 'Dev'  # optional
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: Kubernetes@1
+                  displayName: 'kubectl apply deployment'
+                  inputs:
+                    connectionType: 'Kubernetes Service Connection'
+                    kubernetesServiceConnection: 'k8s-connection'
+                    namespace: 'default'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'deployment.yaml'
+
+                - task: Kubernetes@1
+                  displayName: 'kubectl apply service'
+                  inputs:
+                    connectionType: 'Kubernetes Service Connection'
+                    kubernetesServiceConnection: 'k8s-connection'
+                    namespace: 'default'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'service.yaml'
