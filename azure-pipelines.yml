@@ -39,7 +39,7 @@ stages:
           - task: AzureCLI@2
             displayName: 'Login to ACR'
             inputs:
-              azureSubscription: 'Azure Resource Manager'  # your AzureRM service connection
+              azureSubscription: 'myACRConnection'  # your AzureRM service connection
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
