@@ -7,6 +7,8 @@ pool:
 variables:
   imageName: supplier-service
   tag: '$(Build.BuildId)' # unique tag per build
+  acrName: 'myACRConnection'  # replace with your ACR name
+  acrLoginServer: 'myacrconnection.azurecr.io'  # replace with your ACR login server
 
 stages:
 
@@ -26,22 +28,29 @@ stages:
               mavenVersionOption: 'Default'
               publishJUnitResults: false
 
-  # Stage 2: Build Docker image and push to ACR
+  # Stage 2: Build Docker image and push to ACR using AzureRM
   - stage: Docker
     displayName: 'Build & Push Docker Image'
     dependsOn: Build
     jobs:
       - job: DockerBuild
         steps:
-          - task: Docker@2
-            displayName: 'Build and Push Docker Image'
+          # Login to ACR using AzureRM service connection
+          - task: AzureCLI@2
+            displayName: 'Login to ACR'
             inputs:
-              command: 'buildAndPush'
-              repository: '$(imageName)'
-              dockerfile: 'Dockerfile'
-              containerRegistry: 'myACRConnection'
-              tags: |
-                $(tag)
+              azureSubscription: 'Azure Resource Manager'  # your AzureRM service connection
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Logging in to ACR..."
+                az acr login --name $(acrName)
+
+          # Build and push Docker image
+          - script: |
+              docker build -t $(acrLoginServer)/$(imageName):$(tag) .
+              docker push $(acrLoginServer)/$(imageName):$(tag)
+            displayName: 'Build and Push Docker Image'
 
   # Stage 3: Deploy to Kubernetes
   - stage: Deploy
