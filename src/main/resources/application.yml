@@ -9,7 +9,7 @@ azure:
 
 spring:
   datasource:
-    url: jdbc:postgresql://pg-supplier-demo.postgres.database.azure.com:5432/supplierdb?sslmode=require
+    url: jdbc:postgresql://pg-supplier-learning.postgres.database.azure.com:5432/supplierdb?sslmode=require
     driver-class-name: org.postgresql.Driver
     username: pgadmin  # ${db-username}         # <-- Loaded from Key Vault
     password: P@ssw0rd123!           # <-- Hardcoded

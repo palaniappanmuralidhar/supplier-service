@@ -2,7 +2,7 @@ trigger:
   - main  # or master branch
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: Default   # or the name of your self-hosted agent pool
 
 variables:
   imageName: supplier-service
