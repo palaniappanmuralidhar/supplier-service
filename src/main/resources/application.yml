@@ -3,7 +3,7 @@ server:
 
 azure:
   keyvault:
-    uri: https://supplier-kv.vault.azure.net/
+    uri: https://supplier-kv1.vault.azure.net/
     secret:
       property-sources-enabled: true   # <-- Required to load secrets
 
@@ -11,7 +11,7 @@ spring:
   datasource:
     url: jdbc:postgresql://pg-supplier-learning.postgres.database.azure.com:5432/supplierdb?sslmode=require
     driver-class-name: org.postgresql.Driver
-    username: pgadmin  # ${db-username}         # <-- Loaded from Key Vault
+    username:  ${db-username}         # <-- Loaded from Key Vault # pgadmin  #
     password: P@ssw0rd123!           # <-- Hardcoded
 
   sql:
@@ -32,3 +32,5 @@ management:
   endpoint:
     health:
       show-details: always
+
+
