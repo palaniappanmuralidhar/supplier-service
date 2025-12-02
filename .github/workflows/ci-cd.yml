@@ -41,7 +41,7 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           IMAGE_NAME=supplier-service
-          TAG=${{ github.run_number }}
+          TAG=latest   # ✅ Use latest to match deployment.yaml
           ACR_LOGIN_SERVER=myacrconnection.azurecr.io
           docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG .
           docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG
@@ -68,6 +68,10 @@ jobs:
 
       - name: Debug file paths
         run: ls -R
+
+      - name: Ensure Namespace Exists
+        run: |
+          kubectl get namespace supplier-dev || kubectl create namespace supplier-dev
 
       - name: Deploy to Kubernetes
         run: |
