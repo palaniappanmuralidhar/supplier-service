@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: supplier-service
-          image: acrsupplierdemo.azurecr.io/supplier-service:latest  # ✅ Confirm ACR name matches your pipeline
+          image: myacrconnection.azurecr.io/supplier-service:latest  # ✅ Confirm ACR name matches your pipeline
           ports:
             - containerPort: 8081  # ✅ Ensure Spring Boot runs on 8081 (check application.properties)
 
