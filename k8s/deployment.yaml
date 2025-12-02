@@ -1,8 +1,9 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: supplier-service
-  namespace: supplier-dev
+  namespace: supplier-dev   # Ensure this namespace exists: kubectl create ns supplier-dev
 spec:
   replicas: 1
   selector:
@@ -20,9 +21,9 @@ spec:
     spec:
       containers:
         - name: supplier-service
-          image: acrsupplierdemo.azurecr.io/supplier-service:latest
+          image: acrsupplierdemo.azurecr.io/supplier-service:latest  # ✅ Confirm ACR name matches your pipeline
           ports:
-            - containerPort: 8081
+            - containerPort: 8081  # ✅ Ensure Spring Boot runs on 8081 (check application.properties)
 
           env:
             - name: SPRING_PROFILES_ACTIVE
@@ -30,17 +31,12 @@ spec:
 
             - name: DB_HOST
               value: "your-postgres-host.postgres.database.azure.com"
-
             - name: DB_NAME
               value: "supplierdb"
-
             - name: DB_USER
               value: "postgres"
-
             - name: DB_PASSWORD
               value: "yourpassword"
-
-            # Optional: for SSL connection
             - name: DB_SSL
               value: "true"
 

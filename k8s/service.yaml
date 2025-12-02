@@ -1,13 +1,14 @@
+
 apiVersion: v1
 kind: Service
 metadata:
   name: supplier-service
   namespace: supplier-dev
 spec:
-  type: LoadBalancer
   selector:
     app: supplier-service
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8081
+      port: 80        # External port
+      targetPort: 8081 # Matches containerPort
+  type: LoadBalancer  # ✅ Exposes service publicly
