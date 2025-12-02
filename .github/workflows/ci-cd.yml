@@ -61,9 +61,15 @@ jobs:
           version: 'latest'
 
       - name: Get AKS Credentials
-        run: az aks get-credentials --resource-group ${{ secrets.AZURE_RG }} --name ${{ secrets.AKS_CLUSTER }}
+        run: az aks get-credentials --resource-group ${{ secrets.AZURE_RG }} --name ${{ secrets.AKS_CLUSTER }} --overwrite-existing
+
+      - name: Debug file paths
+        run: ls -R
 
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
+
+      - name: Verify rollout status
+        run: kubectl rollout status deployment/supplier-service -n supplier-dev
