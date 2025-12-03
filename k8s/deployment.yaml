@@ -27,7 +27,7 @@ spec:
 
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: "azure"
+              value: "qa"
 
             - name: DB_HOST
               value: "your-postgres-host.postgres.database.azure.com"

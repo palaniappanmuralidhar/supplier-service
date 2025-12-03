@@ -71,7 +71,7 @@ jobs:
 
       - name: Ensure Namespace Exists
         run: |
-          kubectl get namespace supplier-dev || kubectl create namespace supplier-dev
+          kubectl get namespace supplier-qa || kubectl create namespace supplier-qa
 
       - name: Deploy to Kubernetes
         run: |
@@ -79,4 +79,4 @@ jobs:
           kubectl apply -f k8s/service.yaml
 
       - name: Verify rollout status
-        run: kubectl rollout status deployment/supplier-service -n supplier-dev
+        run: kubectl rollout status deployment/supplier-service -n supplier-qa
