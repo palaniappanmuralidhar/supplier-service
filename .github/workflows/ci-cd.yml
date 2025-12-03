@@ -8,7 +8,6 @@ on:
       - Supplier_DEV
       - Supplier_QA
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,7 +43,7 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           IMAGE_NAME=supplier-service
-          TAG=latest   # ✅ Use latest to match deployment.yaml
+          TAG=latest   # You can change to branch-specific tags if needed
           ACR_LOGIN_SERVER=myacrconnection.azurecr.io
           docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG .
           docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG
@@ -69,17 +68,25 @@ jobs:
       - name: Get AKS Credentials
         run: az aks get-credentials --resource-group ${{ secrets.AZURE_RG }} --name ${{ secrets.AKS_CLUSTER }} --overwrite-existing
 
-      - name: Debug file paths
-        run: ls -R
+      - name: Set Namespace Based on Branch
+        run: |
+          BRANCH_NAME="${GITHUB_REF##*/}"
+          if [[ "$BRANCH_NAME" == "Supplier_DEV" ]]; then
+            echo "NAMESPACE=supplier-dev" >> $GITHUB_ENV
+          elif [[ "$BRANCH_NAME" == "Supplier_QA" ]]; then
+            echo "NAMESPACE=supplier-qa" >> $GITHUB_ENV
+          else
+            echo "NAMESPACE=default" >> $GITHUB_ENV
+          fi
 
       - name: Ensure Namespace Exists
         run: |
-          kubectl get namespace supplier-qa || kubectl create namespace supplier-qa
+          kubectl get namespace $NAMESPACE || kubectl create namespace $NAMESPACE
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+          kubectl apply -n $NAMESPACE -f k8s/deployment.yaml
+          kubectl apply -n $NAMESPACE -f k8s/service.yaml
 
       - name: Verify rollout status
-        run: kubectl rollout status deployment/supplier-service -n supplier-qa
+        run: kubectl rollout status deployment/supplier-service -n $NAMESPACE
