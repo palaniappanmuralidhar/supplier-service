@@ -20,7 +20,7 @@ spring:
   datasource:
     url: jdbc:postgresql://pg-supplier-learning.postgres.database.azure.com:5432/supplierdb?sslmode=require
     driver-class-name: org.postgresql.Driver
-    username: ${db-username}         # <-- Loaded from Key Vault # pgadmin  #
+    username: pgadmin       # <-- Loaded from Key Vault  ${db-username} for pgadmin  #
     password: P@ssw0rd123!
 
   sql:
