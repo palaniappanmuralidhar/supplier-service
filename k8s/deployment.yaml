@@ -3,17 +3,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: supplier-service
-  namespace: supplier-dev   # Ensure this namespace exists: kubectl create ns supplier-dev
+  namespace: supplier-dev
 spec:
-  replicas: 1
+  replicas: 2                      # ⬅️ increase to 2 for safer rolling updates
   selector:
     matchLabels:
       app: supplier-service
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: 1                  # create one extra pod during rollout
+      maxUnavailable: 0            # keep all existing pods available
   template:
     metadata:
       labels:
@@ -21,39 +21,29 @@ spec:
     spec:
       containers:
         - name: supplier-service
-          image: myacrconnection.azurecr.io/supplier-service:latest  # ✅ Confirm ACR name matches your pipeline
+          image: myacrconnection.azurecr.io/supplier-service:latest
+          imagePullPolicy: Always   # optional; helpful if you keep the 'latest' tag
           ports:
-            - containerPort: 8081  # ✅ Ensure Spring Boot runs on 8081 (check application.properties)
-
+            - containerPort: 8081
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "dev"
-
-              #   - name: DB_HOST
-              #value: "your-postgres-host.postgres.database.azure.com"
-              #- name: DB_NAME
-            #  value: "supplierdb"
-              # - name: DB_USER
-              # value: "postgres"
-              #  - name: DB_PASSWORD
-            #  value: "yourpassword"
-              #  - name: DB_SSL
-            #  value: "true"
-
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8081
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 10
-
+            timeoutSeconds: 2
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8081
-            initialDelaySeconds: 40
+            initialDelaySeconds: 90
             periodSeconds: 15
-
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
             limits:
               cpu: "500m"
