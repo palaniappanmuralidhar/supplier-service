@@ -1,22 +1,31 @@
+
 server:
   port: 8081
 
-azure:
-  keyvault:
-    uri: https://supplier-kv1.vault.azure.net/
-    secret:
-      property-sources-enabled: true   # <-- Required to load secrets
-
 spring:
+  cloud:
+    azure:
+      keyvault:
+        secret:
+          property-source-enabled: true
+          property-sources:
+            - name: supplier-kv1
+              endpoint: https://supplier-kv1.vault.azure.net/
+              profile:
+                tenant-id: f97937bb-6454-450f-9558-d4c6c6a126d6
+              credential:
+                managed-identity-enabled: true   # ✅ Recommended for AKS Workload Identity
+                # OR use client-id/client-secret if not using managed identity
+
   datasource:
     url: jdbc:postgresql://pg-supplier-learning.postgres.database.azure.com:5432/supplierdb?sslmode=require
     driver-class-name: org.postgresql.Driver
-    username:  ${db-username}         # <-- Loaded from Key Vault # pgadmin  #
-    password: P@ssw0rd123!           # <-- Hardcoded
+    username: pgadmin       # <-- Loaded from Key Vault  ${db-username} for pgadmin  #
+    password: P@ssw0rd123!
 
   sql:
     init:
-      mode: always        # <– Forces data.sql execution
+      mode: always
       continue-on-error: true
 
   jpa:
@@ -32,5 +41,10 @@ management:
   endpoint:
     health:
       show-details: always
-
-
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
