@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+      - Supplier_DEV
+      - Supplier_QA
 
 jobs:
   build:

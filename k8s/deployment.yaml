@@ -27,18 +27,18 @@ spec:
 
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: "azure"
+              value: "dev"
 
-            - name: DB_HOST
-              value: "your-postgres-host.postgres.database.azure.com"
-            - name: DB_NAME
-              value: "supplierdb"
-            - name: DB_USER
-              value: "postgres"
-            - name: DB_PASSWORD
-              value: "yourpassword"
-            - name: DB_SSL
-              value: "true"
+              #   - name: DB_HOST
+              #value: "your-postgres-host.postgres.database.azure.com"
+              #- name: DB_NAME
+            #  value: "supplierdb"
+              # - name: DB_USER
+              # value: "postgres"
+              #  - name: DB_PASSWORD
+            #  value: "yourpassword"
+              #  - name: DB_SSL
+            #  value: "true"
 
           readinessProbe:
             httpGet:
