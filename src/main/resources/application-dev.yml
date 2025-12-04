@@ -9,7 +9,7 @@ spring:
         secret:
           property-source-enabled: true
           property-sources:
-            - name: supplier-kv
+            - name: supplier-kv1
               endpoint: https://supplier-kv1.vault.azure.net/
               profile:
                 tenant-id: f97937bb-6454-450f-9558-d4c6c6a126d6
