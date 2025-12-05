@@ -4,40 +4,13 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
+      - main
       - Supplier_Dev
       - Supplier_QA
 
 jobs:
-  vars:
-    runs-on: ubuntu-latest
-    outputs:
-      deploy_env: ${{ steps.set.outputs.deploy_env }}
-      namespace: ${{ steps.set.outputs.namespace }}
-    steps:
-      - name: Resolve env/namespace from branch
-        id: set
-        shell: bash
-        run: |
-          case "${GITHUB_REF_NAME}" in
-            Supplier_Dev)
-              echo "deploy_env=dev" >> $GITHUB_OUTPUT
-              echo "namespace=supplier-dev" >> $GITHUB_OUTPUT
-              ;;
-            Supplier_QA)
-              echo "deploy_env=qa" >> $GITHUB_OUTPUT
-              echo "namespace=supplier-qa" >> $GITHUB_OUTPUT
-              ;;
-            *)
-              echo "deploy_env=" >> $GITHUB_OUTPUT
-              echo "namespace=" >> $GITHUB_OUTPUT
-              ;;
-          esac
-          echo "Branch: ${GITHUB_REF_NAME}"
-
   build:
     runs-on: ubuntu-latest
-    needs: vars
-    if: ${{ needs.vars.outputs.deploy_env != '' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -54,11 +27,7 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    needs: [vars, build]
-    if: ${{ needs.vars.outputs.deploy_env != '' }}
-    env:
-      ACR_LOGIN_SERVER: myacrconnection.azurecr.io
-      IMAGE_NAME: supplier-service
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -72,17 +41,16 @@ jobs:
         run: az acr login --name myACRConnection
 
       - name: Build and Push Docker Image
-        env:
-          SHA_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:latest -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$SHA_TAG .
-          docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:latest
-          docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$SHA_TAG
+          IMAGE_NAME=supplier-service
+          TAG=latest   # ✅ Use latest to match deployment.yaml
+          ACR_LOGIN_SERVER=myacrconnection.azurecr.io
+          docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG .
+          docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [vars, docker]
-    if: ${{ needs.vars.outputs.deploy_env != '' }}
+    needs: docker
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -100,20 +68,17 @@ jobs:
       - name: Get AKS Credentials
         run: az aks get-credentials --resource-group ${{ secrets.AZURE_RG }} --name ${{ secrets.AKS_CLUSTER }} --overwrite-existing
 
+      - name: Debug file paths
+        run: ls -R
+
       - name: Ensure Namespace Exists
         run: |
-          kubectl get namespace ${{ needs.vars.outputs.namespace }} || \
-          kubectl create namespace ${{ needs.vars.outputs.namespace }}
+          kubectl get namespace supplier-dev || kubectl create namespace supplier-dev
 
-      - name: Apply manifests to resolved namespace
+      - name: Deploy to Kubernetes
         run: |
-          kubectl -n ${{ needs.vars.outputs.namespace }} apply -f k8s/deployment.yaml
-          kubectl -n ${{ needs.vars.outputs.namespace }} apply -f k8s/service.yaml
-
-      - name: Set Spring profile via env
-        run: |
-          kubectl -n ${{ needs.vars.outputs.namespace }} set env deployment/supplier-service SPRING_PROFILES_ACTIVE=${{ needs.vars.outputs.deploy_env }}
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
 
       - name: Verify rollout status
-        run: |
-          kubectl rollout status deployment/supplier-service -n ${{ needs.vars.outputs.namespace }}
+        run: kubectl rollout status deployment/supplier-service -n supplier-dev
