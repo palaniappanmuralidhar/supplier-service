@@ -4,7 +4,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - Supplier_DEV
+      - Supplier_Dev
       - Supplier_QA
 
 jobs:
