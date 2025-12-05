@@ -19,7 +19,7 @@ jobs:
         shell: bash
         run: |
           case "${GITHUB_REF_NAME}" in
-            Supplier_DEV)
+            Supplier_Dev)
               echo "deploy_env=dev" >> $GITHUB_OUTPUT
               echo "namespace=supplier-dev" >> $GITHUB_OUTPUT
               ;;
